@@ -48,6 +48,23 @@ export const ON_NEW_APPLICATION_SUBSCRIPTION = gql`
   }
 `;
 
+export const ON_SUBMISSION_REVIEWED_SUBSCRIPTION = gql`
+  subscription OnSubmissionReviewed {
+    submissionReviewed {
+      id
+      bountyId
+      status
+      reviewedAt
+      submittedBy
+      submittedByUser {
+        id
+        name
+        image
+      }
+    }
+  }
+`;
+
 export const BOUNTY_DELETED_SUBSCRIPTION = gql`
   subscription BountyDeleted {
     bountyDeleted {
@@ -91,6 +108,21 @@ export interface OnNewApplicationData {
     submittedBy: string;
     status: string;
     createdAt: string;
+    submittedByUser?: {
+      id: string;
+      name?: string | null;
+      image?: string | null;
+    } | null;
+  };
+}
+
+export interface OnSubmissionReviewedData {
+  submissionReviewed: {
+    id: string;
+    bountyId: string;
+    status: string;
+    reviewedAt: string;
+    submittedBy: string;
     submittedByUser?: {
       id: string;
       name?: string | null;
