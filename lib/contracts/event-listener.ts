@@ -1,12 +1,7 @@
 import { rpc, xdr, scValToNative } from "@stellar/stellar-sdk";
 import { QueryClient } from "@tanstack/react-query";
 import { bountyKeys, submissionKeys } from "@/lib/query/query-keys";
-
-const STELLAR_RPC_URL =
-  process.env.NEXT_PUBLIC_STELLAR_RPC_URL ||
-  "https://soroban-testnet.stellar.org";
-
-const BOUNTY_CONTRACT_ID = process.env.NEXT_PUBLIC_BOUNTY_CONTRACT_ID || "";
+import { STELLAR_RPC_URL, BOUNTY_CONTRACT_ID } from "./config";
 
 const POLL_INTERVAL_MS = 6000;
 const LEDGER_LOOKBACK = 60;
