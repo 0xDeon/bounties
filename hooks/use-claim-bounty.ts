@@ -54,6 +54,21 @@ export class FcfsError extends Error {
   }
 }
 
+/**
+ * Safely convert a bounty ID to a bigint.
+ * If the ID is a numeric string it is converted directly;
+ * otherwise it is treated as a hex-encoded UUID (dashes stripped).
+ */
+function toBountyIdBigInt(id: string): bigint {
+  if (/^\d+$/.test(id)) return BigInt(id);
+  const hex = id.replace(/-/g, "");
+  if (/^[0-9a-f]+$/i.test(hex)) return BigInt(`0x${hex}`);
+  throw new FcfsError(
+    "tx_failed",
+    `Invalid bounty ID format: "${id}" is neither numeric nor a valid UUID.`,
+  );
+}
+
 function resolveContractClient(): FcfsContractClient {
   const maybeClient = (globalThis as { __fcfsContracts?: FcfsContractClient })
     .__fcfsContracts;
@@ -69,6 +84,7 @@ function resolveContractClient(): FcfsContractClient {
 function applyDetailOptimisticStatus(
   previous: BountyQuery | undefined,
   nextStatus: string,
+  extra?: Record<string, unknown>,
 ) {
   if (!previous?.bounty) return previous;
   return {
@@ -77,6 +93,7 @@ function applyDetailOptimisticStatus(
       ...previous.bounty,
       status: nextStatus,
       updatedAt: new Date().toISOString(),
+      ...extra,
     },
   };
 }
@@ -116,7 +133,7 @@ export function useClaimBounty() {
       try {
         return await client.claimBounty({
           contributor: contributorAddress,
-          bountyId: BigInt(bountyId),
+          bountyId: toBountyIdBigInt(bountyId),
         });
       } catch (error) {
         const message =
@@ -127,17 +144,27 @@ export function useClaimBounty() {
         throw new FcfsError("tx_failed", message);
       }
     },
-    onMutate: async ({ bountyId }) => {
+    onMutate: async ({ bountyId, contributorAddress }) => {
       await queryClient.cancelQueries({
         queryKey: bountyKeys.detail(bountyId),
       });
+      await queryClient.cancelQueries({
+        queryKey: bountyKeys.lists(),
+      });
+
       const previousDetail = queryClient.getQueryData<BountyQuery>(
         bountyKeys.detail(bountyId),
       );
 
+      const previousLists = queryClient.getQueriesData<BountiesQuery>({
+        queryKey: bountyKeys.lists(),
+      });
+
       queryClient.setQueryData<BountyQuery>(
         bountyKeys.detail(bountyId),
-        applyDetailOptimisticStatus(previousDetail, "IN_PROGRESS"),
+        applyDetailOptimisticStatus(previousDetail, "IN_PROGRESS", {
+          claimedBy: contributorAddress,
+        }),
       );
 
       queryClient.setQueriesData<BountiesQuery>(
@@ -145,14 +172,19 @@ export function useClaimBounty() {
         (old) => applyListOptimisticStatus(old, bountyId),
       );
 
-      return { previousDetail, bountyId };
+      return { previousDetail, previousLists, bountyId };
     },
-    onError: (error, _variables, context) => {
+    onError: (_error, _variables, context) => {
       if (context?.previousDetail) {
         queryClient.setQueryData(
           bountyKeys.detail(context.bountyId),
           context.previousDetail,
         );
+      }
+      if (context?.previousLists) {
+        for (const [key, data] of context.previousLists) {
+          queryClient.setQueryData(key, data);
+        }
       }
     },
     onSettled: (_result, _error, variables) => {
@@ -171,7 +203,7 @@ export function useApproveFcfs() {
       const client = resolveContractClient();
       return client.approveFcfs({
         creator: creatorAddress,
-        bountyId: BigInt(bountyId),
+        bountyId: toBountyIdBigInt(bountyId),
         points,
       });
     },
@@ -179,14 +211,22 @@ export function useApproveFcfs() {
       await queryClient.cancelQueries({
         queryKey: bountyKeys.detail(bountyId),
       });
+      await queryClient.cancelQueries({
+        queryKey: bountyKeys.lists(),
+      });
+
       const previousDetail = queryClient.getQueryData<BountyQuery>(
         bountyKeys.detail(bountyId),
       );
+      const previousLists = queryClient.getQueriesData<BountiesQuery>({
+        queryKey: bountyKeys.lists(),
+      });
+
       queryClient.setQueryData<BountyQuery>(
         bountyKeys.detail(bountyId),
         applyDetailOptimisticStatus(previousDetail, "COMPLETED"),
       );
-      return { previousDetail, bountyId };
+      return { previousDetail, previousLists, bountyId };
     },
     onError: (_error, _variables, context) => {
       if (context?.previousDetail) {
@@ -194,6 +234,11 @@ export function useApproveFcfs() {
           bountyKeys.detail(context.bountyId),
           context.previousDetail,
         );
+      }
+      if (context?.previousLists) {
+        for (const [key, data] of context.previousLists) {
+          queryClient.setQueryData(key, data);
+        }
       }
     },
     onSettled: (_result, _error, variables) => {
@@ -222,7 +267,7 @@ export function useUnclaimBounty() {
       }
       return client.unclaimBounty({
         creator: creatorAddress,
-        bountyId: BigInt(bountyId),
+        bountyId: toBountyIdBigInt(bountyId),
         justification,
       });
     },

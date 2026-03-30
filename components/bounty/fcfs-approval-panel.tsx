@@ -33,7 +33,7 @@ export function FcfsApprovalPanel({ bounty }: { bounty: FcfsApprovalBounty }) {
       ?.walletAddress ||
     (session?.user as { walletAddress?: string; address?: string } | undefined)
       ?.address ||
-    currentUserId;
+    null;
 
   const isCreator = Boolean(
     currentUserId && currentUserId === bounty.createdBy,
@@ -109,10 +109,16 @@ export function FcfsApprovalPanel({ bounty }: { bounty: FcfsApprovalBounty }) {
         />
       </div>
 
+      {!walletAddress && (
+        <p className="text-sm text-amber-400 text-center py-2">
+          Connect your wallet to approve this bounty.
+        </p>
+      )}
+
       <Button
         className="w-full"
         onClick={() => void handleApprove()}
-        disabled={approveMutation.isPending}
+        disabled={approveMutation.isPending || !walletAddress}
       >
         {approveMutation.isPending && (
           <Loader2 className="mr-2 size-4 animate-spin" />

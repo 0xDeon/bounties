@@ -78,7 +78,7 @@ export function FcfsClaimButton({ bounty }: { bounty: FcfsBounty }) {
       ?.walletAddress ||
     (session?.user as { walletAddress?: string; address?: string } | undefined)
       ?.address ||
-    currentUserId;
+    null;
 
   const isFcfs = bounty.type === "FIXED_PRICE";
   const isOpen = bounty.status === "OPEN";
@@ -141,7 +141,13 @@ export function FcfsClaimButton({ bounty }: { bounty: FcfsBounty }) {
 
   return (
     <div className="space-y-3">
-      {isOpen && !isCreator && (
+      {isOpen && !isCreator && !walletAddress && (
+        <p className="text-sm text-amber-400 text-center py-2">
+          Connect your wallet to claim this bounty.
+        </p>
+      )}
+
+      {isOpen && !isCreator && walletAddress && (
         <Button
           className="w-full h-11 font-bold tracking-wide"
           size="lg"
@@ -182,8 +188,10 @@ export function FcfsClaimButton({ bounty }: { bounty: FcfsBounty }) {
 
           {isOwner &&
             ((milestoneMsLeft != null &&
+              milestoneMsLeft > 0 &&
               milestoneMsLeft < 24 * 60 * 60 * 1000) ||
               (responseMsLeft != null &&
+                responseMsLeft > 0 &&
                 responseMsLeft < 24 * 60 * 60 * 1000)) && (
               <p className="text-xs text-amber-300 flex items-center gap-1.5">
                 <AlertTriangle className="size-3.5" />

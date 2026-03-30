@@ -72,7 +72,7 @@ export function BountyDetailClient({ bountyId }: { bountyId: string }) {
         <HeaderCard bounty={bounty} />
         <DescriptionCard description={bounty.description} />
         <BountyDetailSubmissionsCard bounty={bounty} />
-        <FcfsApprovalPanel bounty={bounty} />
+        {bounty.type === "FIXED_PRICE" && <FcfsApprovalPanel bounty={bounty} />}
       </div>
 
       {/* Sidebar */}

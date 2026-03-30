@@ -75,9 +75,13 @@ export function BountyCard({
   onClick,
   variant = "grid",
 }: BountyCardProps) {
-  const status = statusConfig[bounty.status];
+  const normalizedStatus = bounty.status
+    .toUpperCase()
+    .replace(/-/g, "_") as string;
+  const status =
+    statusConfig[normalizedStatus.toLowerCase()] ?? statusConfig.open;
   const isFcfsClaimed =
-    bounty.type === "FIXED_PRICE" && bounty.status === "IN_PROGRESS";
+    bounty.type === "FIXED_PRICE" && normalizedStatus === "IN_PROGRESS";
   const timeLeft = bounty.updatedAt
     ? formatDistanceToNow(new Date(bounty.updatedAt), { addSuffix: true })
     : "N/A";
