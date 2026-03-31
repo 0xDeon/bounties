@@ -58,7 +58,11 @@ export const projectRegistry = new ProjectRegistryClient({
 });
 
 // Re-export transaction helpers for convenience.
-export { buildTransaction, simulateContract, submitTransaction } from "./transaction";
+export {
+  buildTransaction,
+  simulateContract,
+  submitTransaction,
+} from "./transaction";
 
 // Re-export all client classes and their types.
 export { BountyRegistryClient } from "./bounty-registry";

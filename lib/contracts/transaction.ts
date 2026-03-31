@@ -23,8 +23,7 @@ const RPC_URL =
   "https://soroban-testnet.stellar.org";
 
 const NETWORK_PASSPHRASE =
-  process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ??
-  Networks.TESTNET;
+  process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ?? Networks.TESTNET;
 
 const DEFAULT_TIMEOUT_SECONDS = 30;
 
@@ -48,7 +47,10 @@ export async function simulateContract<T>(
 ): Promise<T> {
   const server = getServer();
   const accountData = await server.getAccount(sourcePublicKey);
-  const account = new Account(accountData.accountId(), accountData.sequenceNumber());
+  const account = new Account(
+    accountData.accountId(),
+    accountData.sequenceNumber(),
+  );
 
   const contract = new Contract(contractId);
   const tx = new TransactionBuilder(account, {
@@ -96,7 +98,10 @@ export async function buildTransaction(
 ): Promise<string> {
   const server = getServer();
   const accountData = await server.getAccount(sourcePublicKey);
-  const account = new Account(accountData.accountId(), accountData.sequenceNumber());
+  const account = new Account(
+    accountData.accountId(),
+    accountData.sequenceNumber(),
+  );
 
   const contract = new Contract(contractId);
   const tx = new TransactionBuilder(account, {
@@ -131,7 +136,9 @@ export async function submitTransaction(signedXdr: string): Promise<string> {
 
   if (sent.status === "ERROR") {
     const resultXdr = sent.errorResult?.toXDR("base64") ?? "unknown";
-    throw new Error(`Transaction rejected by network. Result XDR: ${resultXdr}`);
+    throw new Error(
+      `Transaction rejected by network. Result XDR: ${resultXdr}`,
+    );
   }
 
   return sent.hash;
