@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletInfo } from "@/types/wallet";
+import { mockWalletWithAssets } from "@/lib/mock-wallet";
+import { useSearchParams } from "next/navigation";
 
 function WalletConnectPrompt({ onConnect }: { onConnect: () => void }) {
   return (
@@ -75,6 +77,9 @@ function WalletPageSkeleton() {
 }
 
 export default function WalletPage() {
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get("preview") === "1";
+
   const {
     walletInfo: providerInfo,
     isConnected,
@@ -91,21 +96,23 @@ export default function WalletPage() {
   const { data: escrow, isLoading: escrowLoading } =
     useEscrowSummary(walletAddress);
 
-  if (walletLoading) return <WalletPageSkeleton />;
+  if (!isPreview && walletLoading) return <WalletPageSkeleton />;
 
-  if (!isConnected || !providerInfo) {
+  if (!isPreview && (!isConnected || !providerInfo)) {
     return <WalletConnectPrompt onConnect={connect} />;
   }
 
-  const totalBalanceUsd = assets
-    ? assets.reduce((sum, a) => sum + a.usdValue, 0)
-    : providerInfo.balance;
+  const baseInfo = isPreview ? mockWalletWithAssets : providerInfo!;
+  const totalBalanceUsd =
+    !isPreview && assets
+      ? assets.reduce((sum, a) => sum + a.usdValue, 0)
+      : baseInfo.balance;
 
   const walletInfo: WalletInfo = {
-    ...providerInfo,
+    ...baseInfo,
     balance: totalBalanceUsd,
-    assets: assets ?? providerInfo.assets,
-    recentActivity: activity ?? providerInfo.recentActivity,
+    assets: !isPreview && assets ? assets : baseInfo.assets,
+    recentActivity: !isPreview && activity ? activity : baseInfo.recentActivity,
   };
 
   return (
@@ -122,7 +129,7 @@ export default function WalletPage() {
           <BalanceCard
             walletInfo={walletInfo}
             pendingEarnings={escrow?.totalLocked ?? 0}
-            isLoading={assetsLoading}
+            isLoading={!isPreview && assetsLoading}
           />
 
           <Tabs defaultValue="assets" className="w-full">
@@ -134,7 +141,7 @@ export default function WalletPage() {
             </TabsList>
 
             <TabsContent value="assets" className="space-y-4">
-              {assetsLoading ? (
+              {!isPreview && assetsLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-14 rounded-xl" />
@@ -146,7 +153,7 @@ export default function WalletPage() {
             </TabsContent>
 
             <TabsContent value="activity" className="space-y-4">
-              {activityLoading ? (
+              {!isPreview && activityLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-12 rounded-xl" />
@@ -170,7 +177,10 @@ export default function WalletPage() {
         <div className="space-y-8">
           <WalletOverview walletInfo={walletInfo} />
 
-          <EscrowSummary data={escrow} isLoading={escrowLoading} />
+          <EscrowSummary
+            data={escrow}
+            isLoading={!isPreview && escrowLoading}
+          />
 
           <div className="rounded-xl border border-border bg-card p-6">
             <h3 className="font-semibold mb-4">Quick Links</h3>
