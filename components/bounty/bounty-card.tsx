@@ -15,6 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 import { BountyFieldsFragment } from "@/lib/graphql/generated";
 import { EscrowStatus } from "./escrow-status";
 import { useEscrowPool } from "@/hooks/use-escrow";
+import { BookmarkButton } from "./bookmark-button";
 
 interface BountyCardProps {
   bounty: BountyFieldsFragment;
@@ -103,7 +104,7 @@ export function BountyCard({
     <Card
       className={cn(
         "overflow-hidden w-full max-w-sm h-full rounded-lg cursor-pointer transition-all duration-300",
-        "flex flex-col",
+        "flex flex-col relative", // Add relative for bookmark button positioning
         "p-0",
         variant === "list" && "md:flex-row",
       )}
@@ -117,6 +118,11 @@ export function BountyCard({
         }
       }}
     >
+      {/* Bookmark button - top-right corner */}
+      <div className="absolute right-2 top-2 z-10">
+        <BookmarkButton bountyId={bounty.id} size="sm" />
+      </div>
+
       <div className="flex-1 flex flex-col justify-between">
         <CardHeader className="pb-4 px-5 pt-5">
           <div className="flex items-center justify-between gap-3 mb-4">
