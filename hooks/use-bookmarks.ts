@@ -6,6 +6,7 @@ import type { Bookmark } from "@/lib/graphql/generated";
 
 const BOOKMARKS_ENDPOINT = "/api/bookmarks";
 const BOOKMARKS_IDS_ENDPOINT = "/api/bookmarks/ids";
+const BOOKMARK_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 async function fetchBookmarks(): Promise<Bookmark[]> {
   return get<Bookmark[]>(BOOKMARKS_ENDPOINT);
@@ -22,7 +23,7 @@ export function useBookmarks() {
   return useQuery<Bookmark[]>({
     queryKey: bookmarkKeys.list(),
     queryFn: fetchBookmarks,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: BOOKMARK_STALE_TIME,
   });
 }
 
@@ -41,7 +42,7 @@ export function useBookmarkIds() {
   return useQuery<string[]>({
     queryKey: bookmarkKeys.ids(),
     queryFn: fetchBookmarkIds,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: BOOKMARK_STALE_TIME,
     initialData: listData?.map((b) => b.bounty.id) ?? undefined,
   });
 }
