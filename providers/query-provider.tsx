@@ -16,7 +16,7 @@ function makeQueryClient(): QueryClient {
         refetchOnWindowFocus: false,
       },
       mutations: {
-        retry: 0,
+        retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       },
     },

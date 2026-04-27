@@ -50,11 +50,12 @@ function useApplyToBounty(bounty: BountyFieldsFragment) {
     coverLetter: string;
     portfolioUrl?: string;
   }): Promise<void> => {
-    await mutateAsync({
+    const result = await mutateAsync({
       bountyId: bounty.id,
       githubPullRequestUrl: portfolioUrl ?? "",
       comments: coverLetter,
     });
+    if (!result?.submitToBounty?.id) throw new Error("Submission failed: unexpected response");
     toast.success("Application submitted successfully!");
   };
 }
