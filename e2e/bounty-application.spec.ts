@@ -135,7 +135,7 @@ test.describe("Bounty application flow", () => {
 
   test("renders enabled Join Competition button for OPEN COMPETITION bounty", async ({ page }) => {
     await page.goto(`/bounty/${BOUNTY_ID}`);
-    const btn = page.getByTestId("apply-to-bounty-btn");
+    const btn = page.getByTestId("apply-to-bounty-btn").first();
     await expect(btn).toBeVisible();
     await expect(btn).toBeEnabled();
   });
@@ -144,7 +144,7 @@ test.describe("Bounty application flow", () => {
 
   test("clicking Join Competition transitions button to Joined state", async ({ page }) => {
     await page.goto(`/bounty/${BOUNTY_ID}`);
-    await page.getByTestId("apply-to-bounty-btn").click();
+    await page.getByTestId("apply-to-bounty-btn").first().click();
     // After claimBounty resolves, localJoined=true renders a disabled "Joined" button
     await expect(page.getByRole("button", { name: /Joined/i })).toBeVisible({ timeout: 8_000 });
   });
@@ -161,9 +161,9 @@ test.describe("Bounty application flow", () => {
     });
 
     await page.goto(`/bounty/${BOUNTY_ID}`);
-    await page.getByTestId("apply-to-bounty-btn").click();
+    await page.getByTestId("apply-to-bounty-btn").first().click();
     // On failure the button must NOT transition to "Joined"
-    await expect(page.getByTestId("apply-to-bounty-btn")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByTestId("apply-to-bounty-btn").first()).toBeVisible({ timeout: 8_000 });
     await expect(page.getByRole("button", { name: /Joined/i })).not.toBeVisible();
   });
 
