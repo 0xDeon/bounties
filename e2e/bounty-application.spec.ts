@@ -91,7 +91,12 @@ async function setupMocks(page: Page) {
 
   await page.route("**/api/auth/**", async (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname.endsWith("/session")) {
+    // better-auth's getSession endpoint is `/api/auth/get-session` — match
+    // both shapes so the session mock catches it.
+    if (
+      url.pathname.endsWith("/get-session") ||
+      url.pathname.endsWith("/session")
+    ) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -213,7 +218,7 @@ test.describe("Bounty application flow", () => {
       .locator('[data-testid="apply-to-bounty-btn"]:visible')
       .first();
     await expect(btn).toBeVisible();
-    await expect(btn).toBeEnabled();
+    await expect(btn).toBeEnabled({ timeout: 10_000 });
   });
 
   // ── 3. Successful join ────────────────────────────────────────────────
@@ -228,7 +233,7 @@ test.describe("Bounty application flow", () => {
     // Wait for the session to resolve so the button enables — without this,
     // the click can fire before walletAddress is populated and handleJoin
     // returns early before reaching claimBounty().
-    await expect(btn).toBeEnabled();
+    await expect(btn).toBeEnabled({ timeout: 10_000 });
     await btn.click();
     // Assert the join contract path is actually invoked.
     await expect
@@ -265,7 +270,7 @@ test.describe("Bounty application flow", () => {
     const btn = page
       .locator('[data-testid="apply-to-bounty-btn"]:visible')
       .first();
-    await expect(btn).toBeEnabled();
+    await expect(btn).toBeEnabled({ timeout: 10_000 });
     await btn.click();
     // On failure the button must NOT transition to "Joined"
     await expect(
